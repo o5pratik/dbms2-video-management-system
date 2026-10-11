@@ -1,0 +1,14 @@
+backend/target/
+database/*.db
+database/*.db-*
+database/*.accdb
+database/*.laccdb
+.env
+.env.oracle.local
+.env.neon.local
+__pycache__/
+.vscode/
+drivers/
+.install/
+.tools/
+

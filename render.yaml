@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: video-management-system
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: APP_DEMO_ADMIN_ENABLED
+        value: "false"
+      - key: DB_MODE
+        value: POSTGRES
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
