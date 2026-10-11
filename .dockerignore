@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+.tools
+.install
+backend/target
+database/*.db
+database/*.db-*
+database/*.accdb
+drivers
+*.log
