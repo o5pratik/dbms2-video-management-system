@@ -84,7 +84,7 @@ async function loadCategories() {
   } catch (e) { $('formError').textContent = e.message; }
 }
 function videoRow(v) {
-  return `<tr><td>#${v.videoId}</td><td><strong>${escapeHtml(v.title)}</strong></td><td><span class="category-badge">${escapeHtml(v.categoryName)}</span></td><td>${v.duration} min</td><td>${escapeHtml(v.creatorName)}</td><td>${dateText(v.uploadDate)}</td><td>${number(v.views)}</td><td><div class="action-buttons"><button class="table-action" data-action="view" data-id="${v.videoId}">View</button><button class="table-action" data-action="edit" data-id="${v.videoId}">Edit</button><button class="table-action delete" data-action="delete" data-id="${v.videoId}">Delete</button></div></td></tr>`;
+  return `<tr><td><div class="action-buttons"><button class="table-action" data-action="view" data-id="${v.videoId}">View</button><button class="table-action" data-action="edit" data-id="${v.videoId}">Edit</button><button class="table-action delete" data-action="delete" data-id="${v.videoId}">Delete</button></div></td><td>#${v.videoId}</td><td><strong>${escapeHtml(v.title)}</strong></td><td><span class="category-badge">${escapeHtml(v.categoryName)}</span></td><td>${v.duration} min</td><td>${escapeHtml(v.creatorName)}</td><td>${dateText(v.uploadDate)}</td><td>${number(v.views)}</td></tr>`;
 }
 async function loadVideos() {
   $('videoRows').innerHTML = '<tr><td colspan="8" class="empty-cell">Loading videos…</td></tr>';
@@ -126,6 +126,7 @@ async function saveVideo(event) {
 function showView(v) {
   $('modalTitle').textContent = v.title;
   $('modalBody').innerHTML = `<div class="detail-grid"><div><span>Video ID</span><strong>#${v.videoId}</strong></div><div><span>Category</span><strong>${escapeHtml(v.categoryName)}</strong></div><div><span>Duration</span><strong>${v.duration} minutes</strong></div><div><span>Creator</span><strong>${escapeHtml(v.creatorName)}</strong></div><div><span>Upload date</span><strong>${dateText(v.uploadDate)}</strong></div><div><span>Views</span><strong>${number(v.views)}</strong></div></div><div class="detail-description">${escapeHtml(v.description || 'No description provided.')}</div>`;
+  $('modalDeleteBtn').dataset.id = v.videoId;
   $('viewModal').classList.remove('hidden');
 }
 async function editVideo(v) {
@@ -138,6 +139,7 @@ async function editVideo(v) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function askDelete(v) {
+  $('viewModal').classList.add('hidden');
   state.pendingDelete = v; $('deleteDescription').textContent = `“${v.title}” will be permanently removed from the database.`;
   $('deleteModal').classList.remove('hidden');
 }
@@ -203,6 +205,7 @@ $('clearSearchBtn').addEventListener('click', () => { $('searchInput').value='';
 $('videoRows').addEventListener('click', event => { const button=event.target.closest('[data-action]'); if (!button) return; const v=state.videos.find(v=>v.videoId===Number(button.dataset.id)); if (!v) return; if (button.dataset.action==='view') showView(v); if (button.dataset.action==='edit') editVideo(v); if (button.dataset.action==='delete') askDelete(v); });
 $('closeModalBtn').addEventListener('click', () => $('viewModal').classList.add('hidden'));
 $('modalDoneBtn').addEventListener('click', () => $('viewModal').classList.add('hidden'));
+$('modalDeleteBtn').addEventListener('click', () => { const v=state.videos.find(v=>v.videoId===Number($('modalDeleteBtn').dataset.id)); if (v) askDelete(v); });
 $('cancelDeleteBtn').addEventListener('click', () => { $('deleteModal').classList.add('hidden'); state.pendingDelete=null; });
 $('confirmDeleteBtn').addEventListener('click', confirmDelete); $('applyDatesBtn').addEventListener('click', loadReports);
 document.addEventListener('keydown', e => { if (e.key==='Escape') { $('viewModal').classList.add('hidden'); $('deleteModal').classList.add('hidden'); } });
