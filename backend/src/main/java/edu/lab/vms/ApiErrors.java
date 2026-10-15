@@ -1,6 +1,8 @@
 package edu.lab.vms;
 
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiErrors {
+    private static final Logger log = LoggerFactory.getLogger(ApiErrors.class);
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String,String>> api(ApiException ex) {
         return ResponseEntity.status(ex.status()).body(Map.of("error", ex.getMessage()));
@@ -22,6 +25,7 @@ public class ApiErrors {
     }
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<Map<String,String>> database(DataAccessException ex) {
+        log.error("Database operation failed", ex);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", "Database operation failed. Check the connection and try again."));
     }
 }
