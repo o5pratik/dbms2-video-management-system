@@ -63,6 +63,13 @@ public class VideoRepository {
                 input.uploadDate().toString(), input.views(), clean(input.description()));
             return one(id);
         }
+        if ("POSTGRES".equalsIgnoreCase(config.mode())) {
+            Long id = jdbc.queryForObject(
+                "INSERT INTO videos(title, category_id, duration, creator_name, upload_date, views, description) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING video_id",
+                Long.class, input.title().trim(), input.categoryId(), input.duration(), input.creatorName().trim(),
+                input.uploadDate().toString(), input.views(), clean(input.description()));
+            return one(id);
+        }
         GeneratedKeyHolder holder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
