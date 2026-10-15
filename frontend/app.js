@@ -96,6 +96,37 @@ async function loadVideos() {
     $('videoRows').innerHTML = videos.length ? videos.map(videoRow).join('') : '<tr><td colspan="8" class="empty-cell">No matching videos found. Try another search.</td></tr>';
   } catch (e) { $('videoRows').innerHTML = `<tr><td colspan="8" class="empty-cell">${escapeHtml(e.message)}</td></tr>`; }
 }
+function mysqlText(value, required = true) {
+  const text = String(value ?? '').trim();
+  if (required && !text) return '?';
+  return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/\r/g, '\\r').replace(/\n/g, '\\n')}'`;
+}
+function mysqlInteger(value, minimum = 0) {
+  if (value === '' || value == null) return '?';
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number >= minimum ? String(number) : '?';
+}
+function mysqlDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value ?? '')) ? mysqlText(value) : '?';
+}
+function sqlVideoValues(video) {
+  return [mysqlText(video.title), mysqlInteger(video.categoryId, 1), mysqlInteger(video.duration, 1),
+    mysqlText(video.creatorName), mysqlDate(video.uploadDate), mysqlInteger(video.views), mysqlText(video.description, false)];
+}
+function mysqlInsert(video) {
+  return `INSERT INTO videos (title, category_id, duration, creator_name, upload_date, views, description)\nVALUES (${sqlVideoValues(video).join(', ')});`;
+}
+function mysqlUpdate(video, id) {
+  const fields = ['title', 'category_id', 'duration', 'creator_name', 'upload_date', 'views', 'description'];
+  const values = sqlVideoValues(video);
+  return `UPDATE videos\nSET ${fields.map((field, index) => `${field} = ${values[index]}`).join(',\n    ')}\nWHERE video_id = ${mysqlInteger(id, 1)};`;
+}
+function updateSqlPreview() {
+  const video = {title:$('videoTitle').value, categoryId:$('videoCategory').value,
+    duration:$('videoDuration').value, creatorName:$('videoCreator').value,
+    uploadDate:$('videoDate').value, views:$('videoViews').value, description:$('videoDescription').value};
+  $('sqlPreviewCode').textContent = state.editingId ? mysqlUpdate(video, state.editingId) : mysqlInsert(video);
+}
 function resetVideoForm() {
   const now = new Date();
   $('videoForm').reset(); $('videoViews').value = '0';
@@ -103,6 +134,7 @@ function resetVideoForm() {
   $('videoIdDisplay').value = ''; $('formError').textContent = ''; state.editingId = null;
   $('formTitle').textContent = 'Add a new video'; $('saveVideoBtn').innerHTML = 'Save video <span>→</span>';
   $('cancelEditBtn').classList.add('hidden');
+  updateSqlPreview();
 }
 function readVideoForm() {
   const form = $('videoForm');
@@ -126,6 +158,7 @@ async function saveVideo(event) {
 function showView(v) {
   $('modalTitle').textContent = v.title;
   $('modalBody').innerHTML = `<div class="detail-grid"><div><span>Video ID</span><strong>#${v.videoId}</strong></div><div><span>Category</span><strong>${escapeHtml(v.categoryName)}</strong></div><div><span>Duration</span><strong>${v.duration} minutes</strong></div><div><span>Creator</span><strong>${escapeHtml(v.creatorName)}</strong></div><div><span>Upload date</span><strong>${dateText(v.uploadDate)}</strong></div><div><span>Views</span><strong>${number(v.views)}</strong></div></div><div class="detail-description">${escapeHtml(v.description || 'No description provided.')}</div>`;
+  $('viewSqlPreview').textContent = mysqlInsert(v);
   $('modalDeleteBtn').dataset.id = v.videoId;
   $('viewModal').classList.remove('hidden');
 }
@@ -136,6 +169,7 @@ async function editVideo(v) {
   $('videoTitle').value = v.title; $('videoCategory').value = String(v.categoryId); $('videoDuration').value = v.duration;
   $('videoCreator').value = v.creatorName; $('videoDate').value = dateText(v.uploadDate);
   $('videoViews').value = v.views; $('videoDescription').value = v.description || '';
+  updateSqlPreview();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function askDelete(v) {
@@ -199,6 +233,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
 $('menuBtn').addEventListener('click', () => $('sidebar').classList.toggle('open'));
 $('logoutBtn').addEventListener('click', async () => { try { await api('/api/auth/logout',{method:'POST'}); } catch {} showLogin(); toast('Logged out successfully.'); });
 $('videoForm').addEventListener('submit', saveVideo); $('resetVideoBtn').addEventListener('click', resetVideoForm);
+$('videoForm').addEventListener('input', updateSqlPreview); $('videoForm').addEventListener('change', updateSqlPreview);
 $('cancelEditBtn').addEventListener('click', () => { resetVideoForm(); navigate('records'); });
 $('searchBtn').addEventListener('click', loadVideos); $('searchInput').addEventListener('keydown', e => { if (e.key==='Enter') loadVideos(); });
 $('clearSearchBtn').addEventListener('click', () => { $('searchInput').value=''; loadVideos(); });
