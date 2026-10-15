@@ -10,4 +10,4 @@
 .sql-preview pre{margin:0;padding:15px;border-radius:9px;background:#17213f;color:#e7e9ff;font:12px/1.6 Consolas,Monaco,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:310px;overflow:auto}
 .sql-preview-modal{margin:20px 0 0}
 .sql-preview summary{cursor:pointer;font-size:13px;font-weight:800;color:#5e48c2;margin-bottom:12px}
-@media(max-width:620px){.form-card>.sql-preview{margin:20px 17px 0}}
+#videoForm>.sql-preview{margin:20px 0 0}
