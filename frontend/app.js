@@ -84,7 +84,7 @@ async function loadCategories() {
   } catch (e) { $('formError').textContent = e.message; }
 }
 function videoRow(v) {
-  return `<tr><td><div class="action-buttons"><button class="table-action" data-action="view" data-id="${v.videoId}">View</button><button class="table-action" data-action="edit" data-id="${v.videoId}">Edit</button><button class="table-action delete" data-action="delete" data-id="${v.videoId}">Delete</button></div></td><td>#${v.videoId}</td><td><strong>${escapeHtml(v.title)}</strong></td><td><span class="category-badge">${escapeHtml(v.categoryName)}</span></td><td>${v.duration} min</td><td>${escapeHtml(v.creatorName)}</td><td>${dateText(v.uploadDate)}</td><td>${number(v.views)}</td></tr>`;
+  return `<tr><td><div class="action-buttons"><button class="table-action" data-action="view" data-id="${v.videoId}">View SQL</button><button class="table-action" data-action="edit" data-id="${v.videoId}">Edit</button><button class="table-action delete" data-action="delete" data-id="${v.videoId}">Delete</button></div></td><td>#${v.videoId}</td><td><strong>${escapeHtml(v.title)}</strong></td><td><span class="category-badge">${escapeHtml(v.categoryName)}</span></td><td>${v.duration} min</td><td>${escapeHtml(v.creatorName)}</td><td>${dateText(v.uploadDate)}</td><td>${number(v.views)}</td></tr>`;
 }
 async function loadVideos() {
   $('videoRows').innerHTML = '<tr><td colspan="8" class="empty-cell">Loading videos…</td></tr>';
@@ -151,7 +151,7 @@ async function saveVideo(event) {
   try {
     const saved = await api(id ? `/api/videos/${id}` : '/api/videos', {method:id?'PUT':'POST', body:JSON.stringify(payload)});
     toast(id ? `Video #${saved.videoId} updated successfully.` : `Video #${saved.videoId} saved successfully.`);
-    resetVideoForm(); $('searchInput').value = ''; navigate('records');
+    resetVideoForm(); $('searchInput').value = ''; await navigate('records'); showView(saved);
   } catch (e) { $('formError').textContent = e.message; }
   finally { setBusy(button, false); }
 }
@@ -159,6 +159,7 @@ function showView(v) {
   $('modalTitle').textContent = v.title;
   $('modalBody').innerHTML = `<div class="detail-grid"><div><span>Video ID</span><strong>#${v.videoId}</strong></div><div><span>Category</span><strong>${escapeHtml(v.categoryName)}</strong></div><div><span>Duration</span><strong>${v.duration} minutes</strong></div><div><span>Creator</span><strong>${escapeHtml(v.creatorName)}</strong></div><div><span>Upload date</span><strong>${dateText(v.uploadDate)}</strong></div><div><span>Views</span><strong>${number(v.views)}</strong></div></div><div class="detail-description">${escapeHtml(v.description || 'No description provided.')}</div>`;
   $('viewSqlPreview').textContent = mysqlInsert(v);
+  $('viewSqlDetails').open = true;
   $('modalDeleteBtn').dataset.id = v.videoId;
   $('viewModal').classList.remove('hidden');
 }
